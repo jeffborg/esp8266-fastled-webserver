@@ -16,6 +16,8 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <Arduino.h>
+
 //#define FASTLED_ALLOW_INTERRUPTS 1
 //#define INTERRUPT_THRESHOLD 1
 #define FASTLED_INTERRUPT_RETRY_COUNT 0
@@ -41,6 +43,7 @@ extern "C" {
 
 #define ARRAY_SIZE(A) (sizeof(A) / sizeof((A)[0]))
 
+#include "esp8266-fastled-webserver.h"
 #include "Field.h"
 
 //#define RECV_PIN D4
