@@ -57,8 +57,8 @@ ESP8266HTTPUpdateServer httpUpdateServer;
 #include "FSBrowser.h"
 
 #define DATA_PIN      D5
-#define LED_TYPE      WS2811
-#define COLOR_ORDER   RGB
+#define LED_TYPE      WS2812
+#define COLOR_ORDER   GRB
 #define NUM_LEDS      200
 
 #define MILLI_AMPS         2000 // IMPORTANT: set the max milli-Amps of your power supply (4A = 4000mA)
@@ -66,7 +66,7 @@ ESP8266HTTPUpdateServer httpUpdateServer;
 
 String nameString;
 
-const bool apMode = false;
+const bool apMode = true;
 
 #include "Ping.h"
 
@@ -227,6 +227,8 @@ const String paletteNames[paletteCount] = {
 };
 
 #include "Fields.h"
+// include network sync to other esp
+#include "udpSync.h"
 
 void setup() {
   WiFi.setSleepMode(WIFI_NONE_SLEEP);
@@ -241,6 +243,9 @@ void setup() {
   FastLED.setCorrection(TypicalLEDStrip);
   FastLED.setBrightness(brightness);
   FastLED.setMaxPowerInVoltsAndMilliamps(5, MILLI_AMPS);
+  pinMode(LED_BUILTIN, OUTPUT);
+  set_max_power_indicator_LED(LED_BUILTIN);
+
   fill_solid(leds, NUM_LEDS, CRGB::Black);
   FastLED.show();
 
