@@ -26,7 +26,7 @@ CRGB makeDarker( const CRGB& color, fract8 howMuchDarker)
 // per pixel.  This requires a bunch of bit wrangling,
 // but conserves precious RAM.  The cost is a few
 // cycles and about 100 bytes of flash program memory.
-uint8_t  directionFlags[ (NUM_LEDS + 7) / 8];
+uint8_t  directionFlags[ (PHYSICAL_NUM_LEDS + 7) / 8];
 
 bool getPixelDirection( uint16_t i)
 {

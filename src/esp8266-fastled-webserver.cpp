@@ -59,12 +59,18 @@ ESP8266HTTPUpdateServer httpUpdateServer;
 #define DATA_PIN      D5
 #define LED_TYPE      WS2812
 #define COLOR_ORDER   GRB
-#define NUM_LEDS      200
+#ifndef PHYSICAL_NUM_LEDS
+#define PHYSICAL_NUM_LEDS      200
+#endif
+#define NUM_LEDS (mirror ? (PHYSICAL_NUM_LEDS / 2) : PHYSICAL_NUM_LEDS)
 
+#ifndef MILLI_AMPS
 #define MILLI_AMPS         2000 // IMPORTANT: set the max milli-Amps of your power supply (4A = 4000mA)
+#endif
 #define FRAMES_PER_SECOND  120  // here you can control the speed. With the Access Point / Web Server the animations run a bit slower.
 
 String nameString;
+uint8_t mirror = 0;
 
 const bool apMode = true;
 
@@ -81,7 +87,7 @@ const bool apMode = true;
 // char* password = "your-password";
 
 
-CRGB leds[NUM_LEDS];
+CRGB leds[PHYSICAL_NUM_LEDS];
 
 const uint8_t brightnessCount = 5;
 uint8_t brightnessMap[brightnessCount] = { 16, 32, 64, 128, 255 };
@@ -237,7 +243,7 @@ void setup() {
   delay(100);
   Serial.setDebugOutput(true);
 
-  FastLED.addLeds<LED_TYPE, DATA_PIN, COLOR_ORDER>(leds, NUM_LEDS);         // for WS2812 (Neopixel)
+  FastLED.addLeds<LED_TYPE, DATA_PIN, COLOR_ORDER>(leds, PHYSICAL_NUM_LEDS);         // for WS2812 (Neopixel)
   //FastLED.addLeds<LED_TYPE,DATA_PIN,CLK_PIN,COLOR_ORDER>(leds, NUM_LEDS); // for APA102 (Dotstar)
   FastLED.setDither(false);
   FastLED.setCorrection(TypicalLEDStrip);
@@ -246,7 +252,7 @@ void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
   set_max_power_indicator_LED(LED_BUILTIN);
 
-  fill_solid(leds, NUM_LEDS, CRGB::Black);
+  fill_solid(leds, PHYSICAL_NUM_LEDS, CRGB::Black);
   FastLED.show();
 
   EEPROM.begin(512);
@@ -560,7 +566,7 @@ void loop() {
   //  handleIrInput();
 
   if (power == 0) {
-    fill_solid(leds, NUM_LEDS, CRGB::Black);
+    fill_solid(leds, PHYSICAL_NUM_LEDS, CRGB::Black);
     FastLED.show();
     delay(1000 / FRAMES_PER_SECOND);
     return;
@@ -589,7 +595,10 @@ void loop() {
 
   // Call the current pattern function once, updating the 'leds' array
   patterns[currentPatternIndex].pattern();
-
+  Serial.printf("Mirror: %d, leds: %d\n", mirror, NUM_LEDS);
+  if (mirror) {
+    std::reverse_copy(&leds[0], &leds[PHYSICAL_NUM_LEDS/2], &leds[PHYSICAL_NUM_LEDS/2]);
+  }
   FastLED.show();
 
   // insert a delay to keep the framerate modest
@@ -1216,7 +1225,7 @@ void heatMap(CRGBPalette16 palette, bool up)
   random16_add_entropy(random(256));
 
   // Array of temperature readings at each simulation cell
-  static byte heat[NUM_LEDS];
+  static byte heat[PHYSICAL_NUM_LEDS];
 
   byte colorindex;
 

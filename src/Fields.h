@@ -242,6 +242,14 @@ String setSHueMax(String value) {
   sHueMax = value.toInt(); return value;
 }
 
+String getMirror() {
+  return String(mirror);
+}
+String setMirror(String value) {
+  mirror = value.toInt(); return value;
+}
+
+
 FieldList fields = {
     {"name", "Name", LabelFieldType, 0, 0, getName},
 
@@ -293,6 +301,10 @@ FieldList fields = {
     {"sHueBpm", "S Hue BPM", NumberFieldType, 0, 255, getSHueBpm, NULL, setSHueBpm},
     {"sHueMin", "S Hue Min", NumberFieldType, 0, 255, getSHueMin, NULL, setSHueMin},
     {"sHueMax", "S Hue Max", NumberFieldType, 0, 255, getSHueMax, NULL, setSHueMax},
+    
+    {"other", "Other", SectionFieldType},
+
+    {"mirror", "Mirror", BooleanFieldType, 0, 1, getMirror, NULL, setMirror},
 };
 
 uint8_t fieldCount = ARRAY_SIZE(fields);
