@@ -70,7 +70,7 @@ ESP8266HTTPUpdateServer httpUpdateServer;
 #define FRAMES_PER_SECOND  120  // here you can control the speed. With the Access Point / Web Server the animations run a bit slower.
 
 String nameString;
-uint8_t mirror = 0;
+uint8_t mirror = 1;
 
 const bool apMode = true;
 
@@ -595,7 +595,6 @@ void loop() {
 
   // Call the current pattern function once, updating the 'leds' array
   patterns[currentPatternIndex].pattern();
-  Serial.printf("Mirror: %d, leds: %d\n", mirror, NUM_LEDS);
   if (mirror) {
     std::reverse_copy(&leds[0], &leds[PHYSICAL_NUM_LEDS/2], &leds[PHYSICAL_NUM_LEDS/2]);
   }
