@@ -326,6 +326,8 @@ void setup() {
     }
   }
 
+  udpSetup();
+
   httpUpdateServer.setup(&webServer);
 
   webServer.on("/all", HTTP_GET, []() {
@@ -538,6 +540,7 @@ void loop() {
   //  webSocketsServer.loop();
   webServer.handleClient();
   MDNS.update();
+  udpLoop();
 
   //  timeClient.update();
 
