@@ -28,6 +28,8 @@ typedef struct {
     uint8_t sHueMax;
     long entropy;
     uint8_t mirror;
+    uint8_t gHue;
+    uint8_t gCurrentPaletteNumber;
 } Settings;
 
 // make up a settings packet
@@ -59,6 +61,8 @@ Settings readGlobals() {
     t.sHueMin = sHueMin;
     t.sHueMax = sHueMax;
     t.mirror = mirror;
+    t.gHue = gHue;
+    t.gCurrentPaletteNumber = gCurrentPaletteNumber;
     return t;
 }
 
@@ -90,6 +94,8 @@ void setGlobals(const Settings * s) {
     sHueMin = s->sHueMin;
     sHueMax = s->sHueMax;
     mirror = s->mirror;
+    gHue = s->gHue;
+    gCurrentPaletteNumber = s->gCurrentPaletteNumber;
 }
 
 WiFiUDP udp;
@@ -120,9 +126,11 @@ void udpLoop() {
     if (WiFi.isConnected()) {
         int bytesAvailable = udp.parsePacket();
         if (bytesAvailable) {
+            // Serial.println(bytesAvailable);
+            delay(1);
             Settings s;
             // read into s
-            udp.read((char *)&s, bytesAvailable);
+            udp.read((char *)&s, MIN(bytesAvailable, sizeof(s)));
             random16_add_entropy(s.entropy);
             setGlobals(&s);
             FastLED.setBrightness(s.brightness);

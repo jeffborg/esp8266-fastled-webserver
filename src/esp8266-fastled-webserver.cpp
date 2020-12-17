@@ -252,7 +252,9 @@ void setup() {
   FastLED.show();
 
   EEPROM.begin(512);
+  #ifndef RECEIVER
   loadSettings();
+  #endif
 
   FastLED.setBrightness(brightness);
 
@@ -596,21 +598,22 @@ void loop() {
     nblendPaletteTowardPalette( gCurrentPalette, gTargetPalette, 8);
     gHue++;  // slowly cycle the "base color" through the rainbow
   }
+  EVERY_N_MILLIS(1000 / FRAMES_PER_SECOND) {
+    if (autoplay && (millis() > autoPlayTimeout)) {
+      adjustPattern(true);
+      autoPlayTimeout = millis() + (autoplayDuration * 1000);
+    }
 
-  if (autoplay && (millis() > autoPlayTimeout)) {
-    adjustPattern(true);
-    autoPlayTimeout = millis() + (autoplayDuration * 1000);
+    // Call the current pattern function once, updating the 'leds' array
+    patterns[currentPatternIndex].pattern();
+    if (mirror) {
+      std::reverse_copy(&leds[0], &leds[PHYSICAL_NUM_LEDS/2], &leds[PHYSICAL_NUM_LEDS/2]);
+    }
+    FastLED.show();
+    // insert a delay to keep the framerate modest
+    // FastLED.delay(1); // 333 fps
   }
 
-  // Call the current pattern function once, updating the 'leds' array
-  patterns[currentPatternIndex].pattern();
-  if (mirror) {
-    std::reverse_copy(&leds[0], &leds[PHYSICAL_NUM_LEDS/2], &leds[PHYSICAL_NUM_LEDS/2]);
-  }
-  FastLED.show();
-
-  // insert a delay to keep the framerate modest
-  FastLED.delay(1000 / FRAMES_PER_SECOND);
 }
 
 //void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length) {
@@ -897,6 +900,8 @@ void loadSettings()
   sparking = EEPROM.read(12);
 
   coolLikeIncandescent = EEPROM.read(13);
+
+  mirror = EEPROM.read(14);
 }
 
 void setPower(uint8_t value)

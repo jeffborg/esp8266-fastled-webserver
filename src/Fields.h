@@ -246,7 +246,10 @@ String getMirror() {
   return String(mirror);
 }
 String setMirror(String value) {
-  mirror = value.toInt(); return value;
+  mirror = value.toInt();
+  EEPROM.write(14, mirror);
+  EEPROM.commit();
+  return value;
 }
 
 
