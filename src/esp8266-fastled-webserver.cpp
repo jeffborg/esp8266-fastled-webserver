@@ -56,7 +56,10 @@ ESP8266HTTPUpdateServer httpUpdateServer;
 
 #include "FSBrowser.h"
 
-#define DATA_PIN      D5
+#ifndef ESP_DATA_PIN
+#define ESP_DATA_PIN      D5
+#endif
+
 #define LED_TYPE      WS2812
 #define COLOR_ORDER   GRB
 #ifndef PHYSICAL_NUM_LEDS
@@ -243,7 +246,7 @@ void setup() {
   delay(100);
   Serial.setDebugOutput(true);
 
-  FastLED.addLeds<LED_TYPE, DATA_PIN, COLOR_ORDER>(leds, PHYSICAL_NUM_LEDS);         // for WS2812 (Neopixel)
+  FastLED.addLeds<LED_TYPE, ESP_DATA_PIN, COLOR_ORDER>(leds, PHYSICAL_NUM_LEDS);         // for WS2812 (Neopixel)
   //FastLED.addLeds<LED_TYPE,DATA_PIN,CLK_PIN,COLOR_ORDER>(leds, NUM_LEDS); // for APA102 (Dotstar)
   FastLED.setDither(false);
   FastLED.setCorrection(TypicalLEDStrip);
@@ -299,11 +302,15 @@ void setup() {
 
   nameString = "ESP8266-" + macID;
 
+  #ifdef WIFI_NAME
+  const char* nameChar = WIFI_NAME;
+  #else
   char nameChar[nameString.length() + 1];
   memset(nameChar, 0, nameString.length() + 1);
 
   for (int i = 0; i < nameString.length(); i++)
     nameChar[i] = nameString.charAt(i);
+  #endif
 
   Serial.printf("Name: %s\n", nameChar );
 
@@ -311,7 +318,7 @@ void setup() {
   {
     WiFi.mode(WIFI_AP);
 
-    WiFi.softAP(nameChar, WiFiAPPSK);
+    WiFi.softAP(nameChar);
 
     Serial.printf("Connect to Wi-Fi access point: %s\n", nameChar);
     Serial.println("and open http://192.168.4.1 in your browser");
