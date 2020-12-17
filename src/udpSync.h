@@ -62,12 +62,14 @@ WiFiUDP udp;
 void udpSetup() {
 }
 
-
+void forceUdpSync() {
+    udp.beginPacketMulticast(IPAddress(192,168,4,255), 4210, WiFi.softAPIP());
+    Settings s = readGlobals();
+    udp.write((uint8_t *)&s, sizeof(s));
+    udp.endPacket();
+}
 void udpLoop() {
     EVERY_N_MILLIS(100) {
-        udp.beginPacketMulticast(IPAddress(192,168,4,255), 4210, WiFi.softAPIP());
-        Settings s = readGlobals();
-        udp.write((uint8_t *)&s, sizeof(s));
-        udp.endPacket();
+        forceUdpSync();
     }
 }
