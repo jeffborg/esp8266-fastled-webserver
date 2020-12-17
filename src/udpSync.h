@@ -26,8 +26,11 @@ typedef struct {
     uint8_t sHueBpm;
     uint8_t sHueMin;
     uint8_t sHueMax;
+    long entropy;
+    uint8_t mirror;
 } Settings;
 
+// make up a settings packet
 Settings readGlobals() {
     Settings t;
     t.power = power;
@@ -55,21 +58,80 @@ Settings readGlobals() {
     t.sHueBpm = sHueBpm;
     t.sHueMin = sHueMin;
     t.sHueMax = sHueMax;
+    t.mirror = mirror;
     return t;
 }
+
+// set all the globals from a settings packet
+void setGlobals(const Settings * s) {
+    power = s->power;
+    autoplay = s->autoplay;
+    autoplayDuration = s->autoplayDuration;
+    solidColor = s->solidColor;
+    currentPatternIndex = s->currentPatternIndex;
+    currentPaletteIndex = s->currentPaletteIndex;
+    brightness = s->brightness;
+    saturationBpm = s->saturationBpm;
+    saturationMin = s->saturationMin;
+    saturationMax = s->saturationMax;
+    brightDepthBpm = s->brightDepthBpm;
+    brightDepthMin = s->brightDepthMin;
+    brightDepthMax = s->brightDepthMax;
+    brightThetaIncBpm = s->brightThetaIncBpm;
+    brightThetaIncMin = s->brightThetaIncMin;
+    brightThetaIncMax = s->brightThetaIncMax;
+    msMultiplierBpm = s->msMultiplierBpm;
+    msMultiplierMin = s->msMultiplierMin;
+    msMultiplierMax = s->msMultiplierMax;
+    hueIncBpm = s->hueIncBpm;
+    hueIncMin = s->hueIncMin;
+    hueIncMax = s->hueIncMax;
+    sHueBpm = s->sHueBpm;
+    sHueMin = s->sHueMin;
+    sHueMax = s->sHueMax;
+    mirror = s->mirror;
+}
+
 WiFiUDP udp;
 
+#define UDP_PORT 4210
+
 void udpSetup() {
+    #ifdef RECEIVER
+    udp.begin(UDP_PORT);
+    #endif
 }
 
+  // Add entropy to random number generator; we use a lot of it.
+
 void forceUdpSync() {
-    udp.beginPacketMulticast(IPAddress(192,168,4,255), 4210, WiFi.softAPIP());
+    #ifndef RECEIVER
+    udp.beginPacketMulticast(IPAddress(192,168,4,255), UDP_PORT, WiFi.softAPIP());
     Settings s = readGlobals();
+    s.entropy = random(65535);
+    random16_add_entropy(s.entropy);
     udp.write((uint8_t *)&s, sizeof(s));
     udp.endPacket();
+    Serial.printf("power=%d, autoplay=%d, autoplayDuration=%d, currentPatternIndex=%d, currentPaletteIndex=%d, brightness=%d\n", s.power, s.autoplay, s.autoplayDuration, s.currentPatternIndex, s.currentPaletteIndex, s.brightness);
+    #endif
 }
 void udpLoop() {
+    #ifdef RECEIVER
+    if (WiFi.isConnected()) {
+        int bytesAvailable = udp.parsePacket();
+        if (bytesAvailable) {
+            Settings s;
+            // read into s
+            udp.read((char *)&s, bytesAvailable);
+            random16_add_entropy(s.entropy);
+            setGlobals(&s);
+            FastLED.setBrightness(s.brightness);
+            // Serial.printf("power=%d, autoplay=%d, autoplayDuration=%d, currentPatternIndex=%d, currentPaletteIndex=%d, brightness=%d\n", s.power, s.autoplay, s.autoplayDuration, s.currentPatternIndex, s.currentPaletteIndex, s.brightness);
+        }
+    }
+    #else
     EVERY_N_MILLIS(100) {
         forceUdpSync();
     }
+    #endif
 }

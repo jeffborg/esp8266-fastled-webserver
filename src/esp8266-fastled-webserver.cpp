@@ -54,9 +54,10 @@ extern "C" {
 ESP8266WebServer webServer(80);
 //WebSocketsServer webSocketsServer = WebSocketsServer(81);
 // ESP8266HTTPUpdateServer httpUpdateServer;
+#include "FSBrowser.h"
+
 #endif
 
-#include "FSBrowser.h"
 
 #ifndef ESP_DATA_PIN
 #define ESP_DATA_PIN      D5
@@ -324,6 +325,7 @@ void setup() {
 
   udpSetup();
 
+  #ifndef RECEIVER
   webServer.on("/all", HTTP_GET, []() {
     String json = getFieldsJson(fields, fieldCount);
     webServer.sendHeader("Access-Control-Allow-Origin", "*");
@@ -497,6 +499,7 @@ void setup() {
 
   webServer.begin();
   Serial.println("HTTP web server started");
+  #endif
 
   //  webSocketsServer.begin();
   //  webSocketsServer.onEvent(webSocketEvent);
@@ -512,28 +515,34 @@ void sendInt(uint8_t value)
 
 void sendString(String value)
 {
+  #ifndef RECEIVER
   webServer.send(200, "text/plain", value);
+  #endif
 }
 
 void broadcastInt(String name, uint8_t value)
 {
+  #ifndef RECEIVER
   String json = "{\"name\":\"" + name + "\",\"value\":" + String(value) + "}";
   //  webSocketsServer.broadcastTXT(json);
+  #endif
 }
 
 void broadcastString(String name, String value)
 {
+  #ifndef RECEIVER
   String json = "{\"name\":\"" + name + "\",\"value\":\"" + String(value) + "\"}";
   //  webSocketsServer.broadcastTXT(json);
+  #endif
 }
 
 void loop() {
-  // Add entropy to random number generator; we use a lot of it.
-  random16_add_entropy(random(65535));
 
+  #ifndef RECEIVER
   //  webSocketsServer.loop();
   webServer.handleClient();
   MDNS.update();
+  #endif
   udpLoop();
 
   //  timeClient.update();
@@ -546,15 +555,20 @@ void loop() {
     }
     else if (!hasConnected) {
       hasConnected = true;
+      #ifndef RECEIVER
       MDNS.begin(nameString);
       MDNS.setHostname(nameString);
       webServer.begin();
+      #endif
+      udpSetup();
+      #ifndef RECEIVER
       Serial.println("HTTP web server started");
       Serial.print("Connected! Open http://");
       Serial.print(WiFi.localIP());
       Serial.print(" or http://");
       Serial.print(nameString);
       Serial.println(".local in your browser");
+      #endif
     }
   }
 
