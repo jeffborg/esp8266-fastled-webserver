@@ -30,10 +30,11 @@ extern "C" {
 }
 
 #include <ESP8266WiFi.h>
+
+#ifndef RECEIVER
 #include <ESP8266mDNS.h>
 #include <ESP8266WebServer.h>
-#include <ESP8266HTTPUpdateServer.h>
-#include <ESP8266HTTPClient.h>
+#endif
 //#include <WebSocketsServer.h>
 #include <FS.h>
 #include <EEPROM.h>
@@ -49,10 +50,11 @@ extern "C" {
 //IRrecv irReceiver(RECV_PIN);
 
 //#include "Commands.h"
-
+#ifndef RECEIVER
 ESP8266WebServer webServer(80);
 //WebSocketsServer webSocketsServer = WebSocketsServer(81);
-ESP8266HTTPUpdateServer httpUpdateServer;
+// ESP8266HTTPUpdateServer httpUpdateServer;
+#endif
 
 #include "FSBrowser.h"
 
@@ -75,19 +77,9 @@ ESP8266HTTPUpdateServer httpUpdateServer;
 String nameString;
 uint8_t mirror = 1;
 
-const bool apMode = true;
-
-#include "Ping.h"
-
-#include "Secrets.h" // this file is intentionally not included in the sketch, so nobody accidentally commits their secret information.
-// create a Secrets.h file with the following:
-
-// AP mode password
-// const char WiFiAPPSK[] = "your-password";
-
-// Wi-Fi network to connect to (if not in AP mode)
-// char* ssid = "your-ssid";
-// char* password = "your-password";
+#ifndef RECEIVER
+#define AP_MODE
+#endif
 
 
 CRGB leds[PHYSICAL_NUM_LEDS];
@@ -314,28 +306,23 @@ void setup() {
 
   Serial.printf("Name: %s\n", nameChar );
 
-  if (apMode)
-  {
+  #ifdef AP_MODE
     WiFi.mode(WIFI_AP);
 
     WiFi.softAP(nameChar);
 
     Serial.printf("Connect to Wi-Fi access point: %s\n", nameChar);
     Serial.println("and open http://192.168.4.1 in your browser");
-  }
-  else
-  {
+  #else
     WiFi.mode(WIFI_STA);
     WiFi.hostname(nameString);
-    Serial.printf("Connecting to %s\n", ssid);
-    if (String(WiFi.SSID()) != String(ssid)) {
-      WiFi.begin(ssid, password);
+    Serial.printf("Connecting to %s\n", nameChar);
+    if (String(WiFi.SSID()) != String(nameChar)) {
+      WiFi.begin(nameChar);
     }
-  }
+  #endif
 
   udpSetup();
-
-  httpUpdateServer.setup(&webServer);
 
   webServer.on("/all", HTTP_GET, []() {
     String json = getFieldsJson(fields, fieldCount);
@@ -570,8 +557,6 @@ void loop() {
       Serial.println(".local in your browser");
     }
   }
-
-  checkPingTimer();
 
   //  handleIrInput();
 
